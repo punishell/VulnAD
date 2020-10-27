@@ -229,26 +229,76 @@ function Invoke-VulnAD {
     Set-ADDefaultDomainPasswordPolicy -Identity $Global:Domain -LockoutDuration 00:01:00 -LockoutObservationWindow 00:01:00 -ComplexityEnabled $false -ReversibleEncryptionEnabled $False -MinPasswordLength 4
     VulnAD-AddADUser -limit $UsersLimit
     Write-Good "Users Created"
-    VulnAD-AddADGroup -GroupList $Global:HighGroups
+
+    #VulnAD-AddADGroup -GroupList $Global:HighGroups
+    For ($i=0; $i -lt 3; $i++) {
+    Try { Add-ADGroupMember -Identity 'IT Admins' -Members $Global:CreatedUsers[$i] } Catch {}
+    }
+
+    $Global:AllObjects += 'IT Admins';
     Write-Good "$Global:HighGroups Groups Created"
-    VulnAD-AddADGroup -GroupList $Global:MidGroups
+     
+    #VulnAD-AddADGroup -GroupList $Global:MidGroups
+    For ($i=3; $i -lt 6; $i++) {
+    Try { Add-ADGroupMember -Identity 'Project management' -Members $Global:CreatedUsers[$i] } Catch {}
+    }
+    $Global:AllObjects += 'Project management';
     Write-Good "$Global:MidGroups Groups Created"
-    VulnAD-AddADGroup -GroupList $Global:NormalGroups
+    #VulnAD-AddADGroup -GroupList $Global:NormalGroups
+    For ($i=6; $i -lt 9; $i++) {
+    Try { Add-ADGroupMember -Identity 'accounting' -Members $Global:CreatedUsers[$i] } Catch {}
+    }
+    $Global:AllObjects += 'accounting';  
     Write-Good "$Global:NormalGroups Groups Created"
-    VulnAD-BadAcls
+    
+    
+    #VulnAD-BadAcls
+    foreach ($abuse in $Global:BadACL) {
+        $ngroup = 'accounting'
+        $mgroup = 'Project management'
+        $DstGroup = Get-ADGroup -Identity $mgroup
+        $SrcGroup = Get-ADGroup -Identity $ngroup
+        VulnAD-AddACL -Source $SrcGroup.sid -Destination $DstGroup.DistinguishedName -Rights $abuse
+        Write-Info "BadACL $abuse $ngroup to $mgroup"
+    }
+    foreach ($abuse in $Global:BadACL) {
+        $hgroup = 'IT Admins'
+        $mgroup = 'Project management'
+        $DstGroup = Get-ADGroup -Identity $hgroup
+        $SrcGroup = Get-ADGroup -Identity $mgroup
+        VulnAD-AddACL -Source $SrcGroup.sid -Destination $DstGroup.DistinguishedName -Rights $abuse
+        Write-Info "BadACL $abuse $mgroup to $hgroup"
+    }
+    for ($i=1; $i -le (Get-Random -Maximum 25); $i=$i+1 ) {
+        $abuse = (VulnAD-GetRandom -InputList $Global:BadACL);
+        $randomuser = VulnAD-GetRandom -InputList $Global:CreatedUsers
+        $randomgroup = VulnAD-GetRandom -InputList $Global:AllObjects
+        if ((Get-Random -Maximum 2)){
+            $Dstobj = Get-ADUser -Identity $randomuser
+            $Srcobj = Get-ADGroup -Identity $randomgroup
+        }else{
+            $Srcobj = Get-ADUser -Identity $randomuser
+            $Dstobj = Get-ADGroup -Identity $randomgroup
+        }
+        VulnAD-AddACL -Source $Srcobj.sid -Destination $Dstobj.DistinguishedName -Rights $abuse 
+        Write-Info "BadACL $abuse $randomuser and $randomgroup"
+        }
     Write-Good "BadACL Done"
     VulnAD-Kerberoasting
     Write-Good "Kerberoasting Done"
-    VulnAD-ASREPRoasting
+    #VulnAD-ASREPRoasting
+    Set-AdAccountPassword -Identity $Global:CreatedUsers[7] -Reset -NewPassword (ConvertTo-SecureString 'qwerty123' -AsPlainText -Force)
+    Set-ADAccountControl -Identity $Global:CreatedUsers[7] -DoesNotRequirePreAuth 1
+    Write-Info "AS-REPRoasting $Global:CreatedUsers[7]"    
     Write-Good "AS-REPRoasting Done"
-    VulnAD-DnsAdmins
-    Write-Good "DnsAdmins Done"
-    VulnAD-DefaultPassword
-    Write-Good "Leaked Password Done"
-    VulnAD-PasswordSpraying
-    Write-Good "Password Spraying Done"
-    VulnAD-DCSync
-    Write-Good "DCSync Done"
+    #VulnAD-DnsAdmins
+    #Write-Good "DnsAdmins Done"
+    #VulnAD-DefaultPassword
+    #Write-Good "Leaked Password Done"
+    #VulnAD-PasswordSpraying
+    #Write-Good "Password Spraying Done"
+    #VulnAD-DCSync
+    #Write-Good "DCSync Done"
     VulnAD-DisableSMBSigning
     Write-Good "SMB Signing Disabled"
 }
