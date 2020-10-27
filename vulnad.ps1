@@ -292,7 +292,8 @@ function Invoke-VulnAD {
     #VulnAD-ASREPRoasting
     Set-AdAccountPassword -Identity $Global:CreatedUsers[7] -Reset -NewPassword (ConvertTo-SecureString 'qwerty123' -AsPlainText -Force)
     Set-ADAccountControl -Identity $Global:CreatedUsers[7] -DoesNotRequirePreAuth 1
-    Write-Info "AS-REPRoasting $Global:CreatedUsers[7]"    
+    $AS_REP_USER= $Global:CreatedUsers[7]
+    Write-Info "AS-REPRoasting $AS_REP_USER"    
     Write-Good "AS-REPRoasting Done"
     #VulnAD-DnsAdmins
     #Write-Good "DnsAdmins Done"
