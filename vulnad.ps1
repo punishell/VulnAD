@@ -231,6 +231,7 @@ function Invoke-VulnAD {
     Write-Good "Users Created"
 
     #VulnAD-AddADGroup -GroupList $Global:HighGroups
+    Try { New-ADGroup -name 'IT Admins' -GroupScope Global } Catch {}
     For ($i=0; $i -lt 3; $i++) {
     Try { Add-ADGroupMember -Identity 'IT Admins' -Members $Global:CreatedUsers[$i] } Catch {}
     }
@@ -239,12 +240,14 @@ function Invoke-VulnAD {
     Write-Good "$Global:HighGroups Groups Created"
      
     #VulnAD-AddADGroup -GroupList $Global:MidGroups
+    Try { New-ADGroup -name 'Project management' -GroupScope Global } Catch {}
     For ($i=3; $i -lt 6; $i++) {
     Try { Add-ADGroupMember -Identity 'Project management' -Members $Global:CreatedUsers[$i] } Catch {}
     }
     $Global:AllObjects += 'Project management';
     Write-Good "$Global:MidGroups Groups Created"
     #VulnAD-AddADGroup -GroupList $Global:NormalGroups
+    Try { New-ADGroup -name 'accounting' -GroupScope Global } Catch {}
     For ($i=6; $i -lt 9; $i++) {
     Try { Add-ADGroupMember -Identity 'accounting' -Members $Global:CreatedUsers[$i] } Catch {}
     }
@@ -256,7 +259,7 @@ function Invoke-VulnAD {
     foreach ($abuse in $Global:BadACL) {
         $ngroup = 'accounting'
         $mgroup = 'Project management'
-        $DstGroup = Get-ADGroup -Identity $mgroup
+        $DstGroup = Get-ADGroup -Identity 'accounting'
         $SrcGroup = Get-ADGroup -Identity $ngroup
         VulnAD-AddACL -Source $SrcGroup.sid -Destination $DstGroup.DistinguishedName -Rights $abuse
         Write-Info "BadACL $abuse $ngroup to $mgroup"
