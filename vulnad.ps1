@@ -68,8 +68,7 @@ function VulnAD-AddADUser {
         $fullname = "{0} {1}" -f ($firstname , $lastname);
         $SamAccountName = ("{0}.{1}" -f ($firstname, $lastname)).ToLower();
         $principalname = "{0}.{1}" -f ($firstname, $lastname);
-        $generated_password = VulnAD-GetRandom -InputList $Global:BadPasswords;
-        #$generated_password = ([System.Web.Security.Membership]::GeneratePassword(12,2))
+        $generated_password = ([System.Web.Security.Membership]::GeneratePassword(12,2))
         Write-Info "Creating $SamAccountName User"
         Try { New-ADUser -Name "$firstname $lastname" -GivenName $firstname -Surname $lastname -SamAccountName $SamAccountName -UserPrincipalName $principalname@$Global:Domain -AccountPassword (ConvertTo-SecureString $generated_password -AsPlainText -Force) -PassThru | Enable-ADAccount } Catch {}
         $Global:CreatedUsers += $SamAccountName;
