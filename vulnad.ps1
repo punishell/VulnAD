@@ -290,19 +290,23 @@ function Invoke-VulnAD {
     VulnAD-Kerberoasting
     Write-Good "Kerberoasting Done"
     #VulnAD-ASREPRoasting
-    Set-AdAccountPassword -Identity $Global:CreatedUsers[7] -Reset -NewPassword (ConvertTo-SecureString 'qwerty123' -AsPlainText -Force)
-    Set-ADAccountControl -Identity $Global:CreatedUsers[7] -DoesNotRequirePreAuth 1
-    $AS_REP_USER= $Global:CreatedUsers[7]
-    Write-Info "AS-REPRoasting $AS_REP_USER"    
+    $BAD_ACL_USER = $Global:CreatedUsers[8]
+    Set-AdAccountPassword -Identity $BAD_ACL_USER -Reset -NewPassword (ConvertTo-SecureString 'qwerty123' -AsPlainText -Force)
+    Set-ADAccountControl -Identity $BAD_ACL_USER -DoesNotRequirePreAuth 1
+    Write-Info "AS-REPRoasting $BAD_ACL_USER"    
     Write-Good "AS-REPRoasting Done"
-    #VulnAD-DnsAdmins
-    #Write-Good "DnsAdmins Done"
-    #VulnAD-DefaultPassword
-    #Write-Good "Leaked Password Done"
+    VulnAD-DnsAdmins
+    Write-Good "DnsAdmins Done"
+    VulnAD-DefaultPassword
+    Write-Good "Leaked Password Done"
     #VulnAD-PasswordSpraying
-    #Write-Good "Password Spraying Done"
-    #VulnAD-DCSync
-    #Write-Good "DCSync Done"
+    $sql_user = $Global:CreatedUsers[7]
+    Set-AdAccountPassword -Identity $sql_user -Reset -NewPassword (ConvertTo-SecureString $same_password -AsPlainText -Force)
+    Set-ADUser $sql_user -Description "default password"
+    Write-Info "Same Password (Password Spraying) : $sql_user"
+    Write-Good "Password Spraying Done"
+    VulnAD-DCSync
+    Write-Good "DCSync Done"
     VulnAD-DisableSMBSigning
     Write-Good "SMB Signing Disabled"
 }
