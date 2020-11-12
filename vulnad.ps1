@@ -78,10 +78,10 @@ function VulnAD-AddACL {
 }
 
 function VulnAD-Kerberoasting {
-    $selected_service = (VulnAD-GetRandom -InputList $Global:ServicesAccountsAndSPNs)
+    $selected_service = 'mssql_svc,mssqlserver';
     $svc = $selected_service.split(',')[0];
     $spn = $selected_service.split(',')[1];
-    $password = VulnAD-GetRandom -InputList $Global:BadPasswords;
+    $password = 'monkey';
     Write-Info "Kerberoasting $svc $spn"
     Try { New-ADServiceAccount -Name $svc -ServicePrincipalNames "$svc/$spn.$Global:Domain" -AccountPassword (ConvertTo-SecureString $password -AsPlainText -Force) -RestrictToSingleComputer -PassThru } Catch {}
     foreach ($sv in $Global:ServicesAccountsAndSPNs) {
